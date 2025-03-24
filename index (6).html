@@ -1,0 +1,1203 @@
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site de génération des PV de coulage</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .custom-section {
+            position: relative;
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            position: relative;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 16px;
+            margin: 10px auto;
+            display: block;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: 80%;
+            max-width: 300px;
+        }
+        button:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        input[type="date"],
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0 20px 0;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .hidden {
+            display: none;
+        }
+        .step {
+            margin-top: 20px;
+        }
+        #pdfImages img {
+            width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        #pdfImages {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .logo-upload {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+        }
+        .logo-preview {
+            max-width: 200px;
+            max-height: 100px;
+            margin: 10px auto;
+            display: none;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .logo-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
+        }
+        .size-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .size-btn:hover {
+            background: #0056b3;
+            transform: scale(1.1);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+        .size-btn:active {
+            transform: scale(0.95);
+        }
+        #sizeDisplay {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 18px;
+            min-width: 60px;
+            text-align: center;
+            color: #333;
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+        .personnel-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .add-personnel {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            color: #0056b3;
+            margin-top: 10px;
+            padding: 8px;
+            border: 1px dashed #0056b3;
+            border-radius: 5px;
+        }
+        .add-personnel:hover {
+            background-color: #f0f8ff;
+        }
+        .role-input {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+        }
+        .remove-role {
+            color: #dc3545;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 20px;
+            padding: 0 8px;
+        }
+        .remove-role:hover {
+            color: #bb2d3b;
+        }
+        #operationList .personnel-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 50px;
+            gap: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        #operationList .personnel-item input {
+            border: 1px solid #ced4da;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            button {
+                width: 100%;
+                max-width: none;
+            }
+            .logo-upload {
+                margin: 10px;
+                padding: 10px;
+            }
+            .logo-preview {
+                max-width: 150px;
+            }
+            #operationList .personnel-item {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (min-width: 768px) {
+            #pdfImages img {
+                width: 75%;
+            }
+        }
+        @media (min-width: 1024px) {
+            #pdfImages img {
+                width: 50%;
+            }
+        }
+    </style>
+</head>
+<body onload="loadData()">
+    <div class="container">
+        <div class="logo-upload">
+            <input type="file" id="logoInput" accept="image/*" onchange="previewLogo(event)">
+            <img id="logoPreview" class="logo-preview" alt="Aperçu du logo">
+            <div class="logo-controls">
+                <button class="size-btn" onclick="adjustLogoSize(-0.1)">-</button>
+                <span id="sizeDisplay">100%</span>
+                <button class="size-btn" onclick="adjustLogoSize(0.1)">+</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1>Bienvenue dans le Système de Génération des PV de Coulage</h1>
+        <button id="startButton">Commencer</button>
+    
+        <div id="daySelection" class="hidden step">
+            <h2>Choisissez le jour du PV :</h2>
+            <input type="date" id="inspectionDate" required="">
+            <button id="continueDayButton">Continuer</button>
+        </div>
+    
+        <div id="section2" class="hidden step">
+            <div class="custom-section">
+                <h3>Nom du projet</h3>
+                <input type="text" id="nomProjet" placeholder="Entrez le nom du projet">
+            </div>
+    
+            <div class="custom-section">
+                <h3>Procès verbal du jour</h3>
+                <p id="pvDate"></p>
+            </div>
+    
+            <div class="custom-section">
+                <h3>Rapport du coulage de</h3>
+                <input type="text" id="rapportCoulage" placeholder="Entrez le contenu">
+            </div>
+    
+            <div class="custom-section">
+                <h3>Personnels dans le site</h3>
+                <div id="personnelList"></div>
+                <div class="add-personnel" onclick="addPersonnelField()">
+                    <span>+</span> Ajouter un personnel
+                </div>
+            </div>
+    
+            <div class="custom-section">
+                <h3>Élément à couler</h3>
+                <div id="elementList"></div>
+                <div class="add-personnel" onclick="addElementField()">
+                    <span>+</span> Ajouter un élément
+                </div>
+            </div>
+    
+            <div class="custom-section">
+                <h3>Volume de béton total</h3>
+                <input type="text" id="volumeBeton" placeholder="Entrez le volume total (m³)">
+            </div>
+    
+            <div class="custom-section">
+                <h3>Mode de coulage</h3>
+                <label>Type de béton utilisé :</label>
+                <input type="text" id="typeBeton">
+                <label>Fournisseur :</label>
+                <input type="text" id="fournisseur">
+                <label>Méthode de mise en place :</label>
+                <input type="text" id="methodeMiseEnPlace">
+            </div>
+    
+            <div class="custom-section">
+                <h3>Prélèvement des éprouvettes</h3>
+                <label>Nombre d'éprouvettes prélevées :</label>
+                <input type="text" id="nombreEprouvettes">
+                <label>Lieu de stockage des éprouvettes :</label>
+                <input type="text" id="lieuStockage">
+                <label>Tests prévus :</label>
+                <input type="text" id="testsPrevus">
+            </div>
+    
+            <div class="custom-section">
+                <h3>Détails des opérations de coulage</h3>
+                <div id="operationList"></div>
+                <div class="add-personnel" onclick="addOperationField()">
+                    <span>+</span> Ajouter une opération
+                </div>
+            </div>
+    
+            <div class="custom-section">
+                <h3>Contrôle qualité</h3>
+                <label>Température au moment du coulage :</label>
+                <input type="text" id="temperatureCoulage">
+                <label>Les conditions météorologiques :</label>
+                <input type="text" id="conditionsMeteo">
+                <label>Résistance à la compression prévue :</label>
+                <input type="text" id="resistanceCompression">
+                <label>Essai d’affaissement du béton :</label>
+                <input type="text" id="essaiAffaissement">
+            </div>
+    
+            <div class="custom-section">
+                <h3>Observations générales et incidents</h3>
+                <div id="observationList"></div>
+                <div class="add-personnel" onclick="addObservationField()">
+                    <span>+</span> Ajouter une observation
+                </div>
+                <div id="incidentList"></div>
+                <div class="add-personnel" onclick="addIncidentField()">
+                    <span>+</span> Ajouter un incident et solution
+                </div>
+            </div>
+    
+            <div class="custom-section">
+                <h3>Photos du coulage</h3>
+                <input type="file" id="photo1" accept="image/*">
+                <input type="text" id="caption1" placeholder="Légende pour la photo 1">
+                <input type="file" id="photo2" accept="image/*">
+                <input type="text" id="caption2" placeholder="Légende pour la photo 2">
+                <input type="file" id="photo3" accept="image/*">
+                <input type="text" id="caption3" placeholder="Légende pour la photo 3">
+                <input type="file" id="photo4" accept="image/*">
+                <input type="text" id="caption4" placeholder="Légende pour la photo 4">
+            </div>
+
+            <div class="custom-section">
+                <h3>Transmettre à</h3>
+                <textarea id="transmettreA" rows="4" placeholder="Entrez les destinataires"></textarea>
+            </div>
+
+            <button onclick="enregistrer()">Enregistrer le PV</button>
+            <button id="generatePdfButton">Générer le PDF</button>
+            <div id="pdfImages"></div>
+        </div>
+    </div>
+
+    <script>
+        let logoScale = 1.0;
+
+        // Gestion du logo
+        function adjustLogoSize(delta) {
+            logoScale = Math.max(0.5, Math.min(2.0, logoScale + delta));
+            document.getElementById('sizeDisplay').textContent = Math.round(logoScale * 100) + '%';
+        }
+
+        function previewLogo(event) {
+            const input = event.target;
+            const preview = document.getElementById('logoPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Ajout de champs dynamiques
+        function addPersonnelField(role = '', name = '') {
+            const personnelList = document.getElementById('personnelList');
+            const newItem = document.createElement('div');
+            newItem.className = 'personnel-item';
+            newItem.innerHTML = `
+                <input type="text" class="role-input" value="${role}" placeholder="Rôle">
+                <input type="text" placeholder="Nom" value="${name}">
+                <span class="remove-role" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></span>
+            `;
+            personnelList.appendChild(newItem);
+        }
+
+        function addElementField(element = '') {
+            const elementList = document.getElementById('elementList');
+            const newItem = document.createElement('div');
+            newItem.className = 'personnel-item';
+            newItem.innerHTML = `
+                <input type="text" class="role-input" value="${element}" placeholder="Élément à couler">
+                <span class="remove-role" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></span>
+            `;
+            elementList.appendChild(newItem);
+        }
+
+        function addOperationField(element = '', volume = '', debut = '', fin = '', methode = '') {
+            const operationList = document.getElementById('operationList');
+            const newItem = document.createElement('div');
+            newItem.className = 'personnel-item';
+            newItem.innerHTML = `
+                <input type="text" placeholder="Élément" value="${element}">
+                <input type="text" placeholder="Volume (m³)" value="${volume}">
+                <input type="text" placeholder="Début" value="${debut}">
+                <input type="text" placeholder="Fin" value="${fin}">
+                <input type="text" placeholder="Méthode" value="${methode}">
+                <span class="remove-role" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></span>
+            `;
+            operationList.appendChild(newItem);
+        }
+
+        function addObservationField(titre = '', contenu = '') {
+            const observationList = document.getElementById('observationList');
+            const newItem = document.createElement('div');
+            newItem.className = 'personnel-item';
+            newItem.innerHTML = `
+                <input type="text" placeholder="Titre de l'observation" value="${titre}">
+                <textarea placeholder="Contenu de l'observation" rows="2">${contenu}</textarea>
+                <span class="remove-role" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></span>
+            `;
+            observationList.appendChild(newItem);
+        }
+
+        function addIncidentField(titre = '', contenu = '', solution = '') {
+            const incidentList = document.getElementById('incidentList');
+            const newItem = document.createElement('div');
+            newItem.className = 'personnel-item';
+            newItem.innerHTML = `
+                <input type="text" placeholder="Titre de l'incident" value="${titre}">
+                <textarea placeholder="Contenu de l'incident" rows="2">${contenu}</textarea>
+                <textarea placeholder="Solution" rows="2">${solution}</textarea>
+                <span class="remove-role" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></span>
+            `;
+            incidentList.appendChild(newItem);
+        }
+
+        // Enregistrement des données
+        function enregistrer() {
+            const logoInput = document.getElementById('logoInput');
+            const reader = new FileReader();
+
+            if (logoInput.files[0]) {
+                reader.readAsDataURL(logoInput.files[0]);
+                reader.onload = function() {
+                    saveData(reader.result);
+                };
+            } else {
+                saveData(document.getElementById('logoPreview').src);
+            }
+        }
+
+        function saveData(logoData) {
+            const personnelData = [];
+            document.querySelectorAll('#personnelList .personnel-item').forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                if (inputs[0].value.trim() && inputs[1].value.trim()) {
+                    personnelData.push({
+                        role: inputs[0].value,
+                        name: inputs[1].value
+                    });
+                }
+            });
+
+            const elementData = [];
+            document.querySelectorAll('#elementList .personnel-item').forEach(item => {
+                const input = item.querySelector('input');
+                if (input.value.trim()) {
+                    elementData.push(input.value);
+                }
+            });
+
+            const operationData = [];
+            document.querySelectorAll('#operationList .personnel-item').forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                if (inputs[0].value.trim()) {
+                    operationData.push({
+                        element: inputs[0].value,
+                        volume: inputs[1].value,
+                        debut: inputs[2].value,
+                        fin: inputs[3].value,
+                        methode: inputs[4].value
+                    });
+                }
+            });
+
+            const observationData = [];
+            document.querySelectorAll('#observationList .personnel-item').forEach(item => {
+                const inputs = item.querySelectorAll('input, textarea');
+                if (inputs[0].value.trim() || inputs[1].value.trim()) {
+                    observationData.push({
+                        titre: inputs[0].value,
+                        contenu: inputs[1].value
+                    });
+                }
+            });
+
+            const incidentData = [];
+            document.querySelectorAll('#incidentList .personnel-item').forEach(item => {
+                const inputs = item.querySelectorAll('input, textarea');
+                if (inputs[0].value.trim() || inputs[1].value.trim() || inputs[2].value.trim()) {
+                    incidentData.push({
+                        titre: inputs[0].value,
+                        contenu: inputs[1].value,
+                        solution: inputs[2].value
+                    });
+                }
+            });
+
+            const data = {
+                logo: logoData,
+                logoScale: logoScale,
+                nomProjet: document.getElementById('nomProjet').value,
+                rapportCoulage: document.getElementById('rapportCoulage').value,
+                personnel: personnelData,
+                elements: elementData,
+                volumeBeton: document.getElementById('volumeBeton').value,
+                typeBeton: document.getElementById('typeBeton').value,
+                fournisseur: document.getElementById('fournisseur').value,
+                methodeMiseEnPlace: document.getElementById('methodeMiseEnPlace').value,
+                nombreEprouvettes: document.getElementById('nombreEprouvettes').value,
+                lieuStockage: document.getElementById('lieuStockage').value,
+                testsPrevus: document.getElementById('testsPrevus').value,
+                operations: operationData,
+                temperatureCoulage: document.getElementById('temperatureCoulage').value,
+                conditionsMeteo: document.getElementById('conditionsMeteo').value,
+                resistanceCompression: document.getElementById('resistanceCompression').value,
+                essaiAffaissement: document.getElementById('essaiAffaissement').value,
+                observations: observationData,
+                incidents: incidentData,
+                transmettreA: document.getElementById('transmettreA').value
+            };
+
+            localStorage.setItem('pvDataCoulage', JSON.stringify(data));
+            alert('Données enregistrées avec succès.');
+        }
+
+        // Chargement des données
+        function loadData() {
+            const savedData = localStorage.getItem('pvDataCoulage');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+
+                if (data.logo) {
+                    document.getElementById('logoPreview').src = data.logo;
+                    document.getElementById('logoPreview').style.display = 'block';
+                }
+                if (data.logoScale) {
+                    logoScale = data.logoScale;
+                    document.getElementById('sizeDisplay').textContent = Math.round(logoScale * 100) + '%';
+                }
+
+                document.getElementById('nomProjet').value = data.nomProjet || '';
+                document.getElementById('rapportCoulage').value = data.rapportCoulage || '';
+                document.getElementById('volumeBeton').value = data.volumeBeton || '';
+                document.getElementById('typeBeton').value = data.typeBeton || '';
+                document.getElementById('fournisseur').value = data.fournisseur || '';
+                document.getElementById('methodeMiseEnPlace').value = data.methodeMiseEnPlace || '';
+                document.getElementById('nombreEprouvettes').value = data.nombreEprouvettes || '';
+                document.getElementById('lieuStockage').value = data.lieuStockage || '';
+                document.getElementById('testsPrevus').value = data.testsPrevus || '';
+                document.getElementById('temperatureCoulage').value = data.temperatureCoulage || '';
+                document.getElementById('conditionsMeteo').value = data.conditionsMeteo || '';
+                document.getElementById('resistanceCompression').value = data.resistanceCompression || '';
+                document.getElementById('essaiAffaissement').value = data.essaiAffaissement || '';
+                document.getElementById('transmettreA').value = data.transmettreA || '';
+
+                const personnelList = document.getElementById('personnelList');
+                personnelList.innerHTML = '';
+                if (data.personnel) {
+                    data.personnel.forEach(person => addPersonnelField(person.role, person.name));
+                }
+
+                const elementList = document.getElementById('elementList');
+                elementList.innerHTML = '';
+                if (data.elements) {
+                    data.elements.forEach(element => addElementField(element));
+                }
+
+                const operationList = document.getElementById('operationList');
+                operationList.innerHTML = '';
+                if (data.operations) {
+                    data.operations.forEach(op => addOperationField(op.element, op.volume, op.debut, op.fin, op.methode));
+                }
+
+                const observationList = document.getElementById('observationList');
+                observationList.innerHTML = '';
+                if (data.observations) {
+                    data.observations.forEach(obs => addObservationField(obs.titre, obs.contenu));
+                }
+
+                const incidentList = document.getElementById('incidentList');
+                incidentList.innerHTML = '';
+                if (data.incidents) {
+                    data.incidents.forEach(inc => addIncidentField(inc.titre, inc.contenu, inc.solution));
+                }
+            }
+        }
+
+        // Navigation
+        document.getElementById('startButton').addEventListener('click', () => {
+            document.getElementById('daySelection').classList.remove('hidden');
+            document.getElementById('startButton').classList.add('hidden');
+        });
+
+        document.getElementById('continueDayButton').addEventListener('click', () => {
+            const selectedDate = document.getElementById('inspectionDate').value;
+            if (selectedDate) {
+                document.getElementById('pvDate').textContent = formatDate(selectedDate);
+                document.getElementById('section2').classList.remove('hidden');
+                document.getElementById('daySelection').classList.add('hidden');
+            } else {
+                alert('Veuillez sélectionner une date pour continuer.');
+            }
+        });
+
+        // Formatage de la date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('fr-FR', options);
+        }
+
+        // Fonction de compression des images
+        function compressImage(file, maxWidth = 800, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const ratio = img.width / img.height;
+                        const width = Math.min(maxWidth, img.width);
+                        const height = width / ratio;
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        resolve(dataUrl);
+                    };
+                    img.onerror = reject;
+                    img.src = event.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Génération du PDF
+        document.getElementById('generatePdfButton').addEventListener('click', () => {
+            const date = document.getElementById('inspectionDate').value;
+            if (!date) {
+                alert('Veuillez sélectionner une date avant de générer le PDF.');
+                return;
+            }
+
+            async function generatePdf() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ format: 'a4', unit: 'mm', compress: true });
+
+                const marginSides = 25; // Marges côtés : 2,5 cm
+                const marginTopFirst = 7; // Marge haut 1re page réduite à 0,7 cm
+                const marginTopOther = 25; // Marge haut autres pages : 2,5 cm
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const bottomMargin = 20;
+
+                function addNewPage() {
+                    doc.addPage();
+                    doc.setLineWidth(0.1);
+                    doc.rect(5, 5, pageWidth - 10, pageHeight - 10); // Bordure décalée de 5 mm
+                    return marginTopOther; // Retourne la marge haute pour les nouvelles pages
+                }
+
+                // Bordure décalée pour la première page
+                doc.setLineWidth(0.1);
+                doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
+
+                // Logo et filigrane
+                const savedData = JSON.parse(localStorage.getItem('pvDataCoulage')) || {};
+                let yPosition = marginTopFirst; // Position initiale juste après la marge supérieure réduite
+                if (savedData.logo) {
+                    try {
+                        const logoImg = new Image();
+                        await new Promise((resolve, reject) => {
+                            logoImg.onload = resolve;
+                            logoImg.onerror = reject;
+                            logoImg.src = savedData.logo;
+                        });
+                        const baseLogoWidth = 40;
+                        const logoWidth = baseLogoWidth * (savedData.logoScale || 1);
+                        const logoHeight = (logoWidth * logoImg.height) / logoImg.width;
+                        doc.addImage(logoImg, 'PNG', (pageWidth - logoWidth) / 2, yPosition, logoWidth, logoHeight);
+                        yPosition += logoHeight + 3; // Ajouter la hauteur du logo + un petit espace (3 mm ici)
+                        const baseWatermarkSize = 80;
+                        const watermarkSize = baseWatermarkSize * (savedData.logoScale || 1);
+                        const x = (pageWidth - watermarkSize) / 2;
+                        const y = (pageHeight - watermarkSize) / 2;
+                        doc.setGState(new doc.GState({ opacity: 0.1 }));
+                        doc.addImage(logoImg, 'PNG', x, y, watermarkSize, watermarkSize);
+                        doc.setGState(new doc.GState({ opacity: 1 }));
+                    } catch (e) {
+                        console.error('Erreur de chargement du logo', e);
+                    }
+                }
+
+                doc.setFont("Times", "normal");
+
+                // En-tête
+                doc.setFontSize(12);
+                doc.setFont("Times", "bold");
+                const projectText = `${document.getElementById('nomProjet').value || ''}`;
+                const projectWidth = doc.getStringUnitWidth(projectText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+                doc.text(projectText, (pageWidth - projectWidth) / 2, yPosition);
+                yPosition += 7.5; // Interligne 1.5
+
+                doc.setFont("Times", "italic"); // Pas en gras, en italique
+                const pvText = `Procès verbal du ${formatDate(date)}`;
+                const pvWidth = doc.getStringUnitWidth(pvText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+                doc.text(pvText, (pageWidth - pvWidth) / 2, yPosition);
+                yPosition += 10.5; // Interligne 1.5
+
+                doc.setFontSize(14);
+                doc.setFont("Times", "bold");
+                const rapportText = `Rapport de coulage de ${document.getElementById('rapportCoulage').value || ''}`;
+                const rapportWidth = doc.getStringUnitWidth(rapportText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+                doc.text(rapportText, (pageWidth - rapportWidth) / 2, yPosition);
+                yPosition += 15; // Interligne 1.5
+
+                // Récupération des données
+                const nomProjet = document.getElementById('nomProjet').value || '';
+                const rapportCoulage = document.getElementById('rapportCoulage').value || '';
+                const personnelData = [];
+                document.querySelectorAll('#personnelList .personnel-item').forEach(item => {
+                    const inputs = item.querySelectorAll('input');
+                    if (inputs[0].value.trim() && inputs[1].value.trim()) {
+                        personnelData.push({
+                            role: inputs[0].value,
+                            name: inputs[1].value
+                        });
+                    }
+                });
+                const elementData = [];
+                document.querySelectorAll('#elementList .personnel-item').forEach(item => {
+                    const input = item.querySelector('input');
+                    if (input.value.trim()) {
+                        elementData.push(input.value);
+                    }
+                });
+                const volumeBeton = document.getElementById('volumeBeton').value || '';
+                const typeBeton = document.getElementById('typeBeton').value || '';
+                const fournisseur = document.getElementById('fournisseur').value || '';
+                const methodeMiseEnPlace = document.getElementById('methodeMiseEnPlace').value || '';
+                const nombreEprouvettes = document.getElementById('nombreEprouvettes').value || '';
+                const lieuStockage = document.getElementById('lieuStockage').value || '';
+                const testsPrevus = document.getElementById('testsPrevus').value || '';
+                const operationData = [];
+                document.querySelectorAll('#operationList .personnel-item').forEach(item => {
+                    const inputs = item.querySelectorAll('input');
+                    if (inputs[0].value.trim()) {
+                        operationData.push({
+                            element: inputs[0].value,
+                            volume: inputs[1].value,
+                            debut: inputs[2].value,
+                            fin: inputs[3].value,
+                            methode: inputs[4].value
+                        });
+                    }
+                });
+                const temperatureCoulage = document.getElementById('temperatureCoulage').value || '';
+                const conditionsMeteo = document.getElementById('conditionsMeteo').value || '';
+                const resistanceCompression = document.getElementById('resistanceCompression').value || '';
+                const essaiAffaissement = document.getElementById('essaiAffaissement').value || '';
+                const observationData = [];
+                document.querySelectorAll('#observationList .personnel-item').forEach(item => {
+                    const inputs = item.querySelectorAll('input, textarea');
+                    if (inputs[0].value.trim() || inputs[1].value.trim()) {
+                        observationData.push({
+                            titre: inputs[0].value,
+                            contenu: inputs[1].value
+                        });
+                    }
+                });
+                const incidentData = [];
+                document.querySelectorAll('#incidentList .personnel-item').forEach(item => {
+                    const inputs = item.querySelectorAll('input, textarea');
+                    if (inputs[0].value.trim() || inputs[1].value.trim() || inputs[2].value.trim()) {
+                        incidentData.push({
+                            titre: inputs[0].value,
+                            contenu: inputs[1].value,
+                            solution: inputs[2].value
+                        });
+                    }
+                });
+                const transmettreA = document.getElementById('transmettreA').value || '';
+
+                // Sections dans le PDF
+                doc.setFontSize(12);
+                doc.setFont("Times", "bold");
+
+                // Personnel sur site (Nom à gauche, Rôle à droite)
+                if (personnelData.length > 0) {
+                    if (yPosition > pageHeight - bottomMargin) {
+                        yPosition = addNewPage();
+                    }
+                    doc.text("- Personnel sur site :", marginSides, yPosition);
+                    yPosition += 7.5; // Interligne 1.5
+                    doc.setFont("Times", "normal");
+                    const introText = "Les personnes suivantes se sont rendues aujourd’hui sur le chantier pour observer l’opération de coulage :";
+                    const splitIntroText = doc.splitTextToSize(introText, pageWidth - 2 * marginSides);
+                    doc.text(splitIntroText, marginSides, yPosition);
+                    yPosition += splitIntroText.length * 7.5; // Interligne 1.5
+
+                    const contentWidth = pageWidth - 2 * marginSides;
+                    personnelData.forEach(person => {
+                        if (yPosition > pageHeight - bottomMargin) {
+                            yPosition = addNewPage();
+                        }
+                        const nameText = person.name;
+                        const roleText = person.role;
+                        const nameWidth = doc.getStringUnitWidth(nameText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+                        const roleWidth = doc.getStringUnitWidth(roleText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+                        const dotsWidth = contentWidth - nameWidth - roleWidth - 10; // 10 mm pour les espaces
+                        const dots = '.'.repeat(Math.ceil(dotsWidth / (doc.getStringUnitWidth('.') * doc.internal.getFontSize() / doc.internal.scaleFactor)));
+                        doc.setFont("Times", "bold"); // Nom en gras
+                        doc.text(nameText, marginSides, yPosition);
+                        doc.setFont("Times", "normal");
+                        doc.text(dots, marginSides + nameWidth + 5, yPosition);
+                        doc.text(roleText, pageWidth - marginSides - roleWidth, yPosition);
+                        yPosition += 7.5; // Interligne 1.5
+                    });
+                    yPosition += 10;
+                }
+
+                // Nature de la tâche à couler (Sans "Élément :")
+                if (elementData.length > 0 || volumeBeton) {
+                    if (yPosition > pageHeight - bottomMargin) {
+                        yPosition = addNewPage();
+                    }
+                    doc.setFont("Times", "bold");
+                    doc.text("- Nature de la tâche à couler :", marginSides, yPosition);
+                    yPosition += 7.5; // Interligne 1.5
+                    doc.setFont("Times", "normal");
+                    elementData.forEach(element => {
+                        if (yPosition > pageHeight - bottomMargin) {
+                            yPosition = addNewPage();
+                        }
+                        const elementText = `• ${element}`; // Suppression de "Élément :"
+                        const splitText = doc.splitTextToSize(elementText, pageWidth - 2 * marginSides);
+                        doc.text(splitText, marginSides + 5, yPosition);
+                        yPosition += splitText.length * 7.5; // Interligne 1.5
+                    });
+                    if (volumeBeton) {
+                        if (yPosition > pageHeight - bottomMargin) {
+                            yPosition = addNewPage();
+                        }
+                        doc.setFont("Times", "bold");
+                        doc.setFontSize(14); // Un peu plus grand
+                        doc.text("- Volume de béton total : ", marginSides, yPosition);
+                        doc.setTextColor(255, 0, 0); // Rouge
+                        doc.text(volumeBeton, marginSides + doc.getTextWidth("- Volume de béton total : "), yPosition); // Même ligne
+                        doc.setTextColor(0, 0, 0); // Retour à noir
+                        doc.setFontSize(12); // Retour à la taille normale
+                        doc.setFont("Times", "normal");
+                        yPosition += 7.5; // Interligne 1.5
+                    }
+                    yPosition += 10;
+                }
+
+                // Mode de coulage
+                if (typeBeton || fournisseur || methodeMiseEnPlace) {
+                    if (yPosition > pageHeight - bottomMargin) {
+                        yPosition = addNewPage();
+                    }
+                    doc.setFont("Times", "bold");
+                    doc.text("- Mode de coulage :", marginSides, yPosition);
+                    yPosition += 7.5; // Interligne 1.5
+
+                    const subTitles = [
+                        { title: "• Type de béton utilisé: ", text: typeBeton },
+                        { title: "• Fournisseur: ", text: fournisseur },
+                        { title: "• Méthode de mise en place: ", text: methodeMiseEnPlace }
+                    ];
+
+                    subTitles.forEach(sub => {
+                        if (sub.text) {
+                            if (yPosition > pageHeight - bottomMargin) {
+                                yPosition = addNewPage();
+                            }
+                            // Écrire le sous-titre en gras
+                            doc.setFont("Times", "bold");
+                            const titleWidth = doc.getTextWidth(sub.title);
+                            doc.text(sub.title, marginSides + 5, yPosition);
+                            
+                            // Écrire le contenu en normal
+                            doc.setFont("Times", "normal");
+                            const contentText = sub.text;
+                            const splitContent = doc.splitTextToSize(contentText, pageWidth - marginSides - 5 - titleWidth - 5);
+                            doc.text(splitContent, marginSides + 5 + titleWidth, yPosition);
+                            
+                            // Ajuster yPosition en fonction du nombre de lignes du contenu
+                            const lines = splitContent.length;
+                            yPosition += lines * 7.5; // Interligne 1.5 pour chaque ligne
+                        }
+                    });
+                    yPosition += 10; // Espace après la section complète
+                }
+
+                // Prélèvement des éprouvettes
+                if (nombreEprouvettes || lieuStockage || testsPrevus) {
+                    if (yPosition > pageHeight - bottomMargin) {
+                        yPosition = addNewPage();
+                    }
+                    doc.setFont("Times", "bold");
+                    doc.text("- Prélèvement des éprouvettes :", marginSides, yPosition);
+                    yPosition += 7.5; // Interligne 1.5
+                    doc.setFont("Times", "normal"); // Changer à normal après le titre principal
+
+                    const subTitles = [
+                        { title: "• Nombre d'éprouvettes prélevées: ", text: nombreEprouvettes },
+                        { title: "• Lieu de stockage des éprouvettes: ", text: lieuStockage },
+                        { title: "• Tests prévus: ", text: testsPrevus }
+                    ];
+
+                    subTitles.forEach(sub => {
+                        if (sub.text) {
+                            if (yPosition > pageHeight - bottomMargin) {
+                                yPosition = addNewPage();
+                            }
+                            const fullText = `${sub.title}${sub.text}`;
+                            const splitText = doc.splitTextToSize(fullText, pageWidth - 2 * marginSides);
+                            doc.text(splitText[0], marginSides + 5, yPosition); // Première ligne
+                            if (splitText.length > 1) {
+                                for (let i = 1; i < splitText.length; i++) {
+                                    yPosition += 7.5; // Interligne 1.5
+                                    if (yPosition > pageHeight - bottomMargin) {
+                                        yPosition = addNewPage();
+                                    }
+                                    doc.text(splitText[i], marginSides + 5, yPosition);
+                                }
+                            }
+                            yPosition += 7.5; // Interligne 1.5 pour le titre suivant
+                        }
+                    });
+                    yPosition += 10; // Espace après la section complète
+                }
+
+                // Détails des opérations de coulage
+                if (operationData.length > 0) {
+                    if (yPosition > pageHeight - bottomMargin - 20) {
+                        yPosition = addNewPage();
+                    }
+                    doc.setFont("Times", "bold");
+                    doc.text("- Détails des opérations de coulage :", marginSides, yPosition);
+                    yPosition += 7.5; // Interligne 1.5
+
+                    const tableColumn = ["Élément", "Volume de béton (m³)", "Début du coulage", "Fin du coulage", "Méthode de mise en place"];
+                    const tableRows = operationData.map(op => [
+                        op.element,
+                        { content: op.volume, styles: { fontStyle: 'bold', textColor: [255, 0, 0] } }, // Volume en gras et rouge
+                        op.debut,
+                        op.fin,
+                        op.methode
+                    ]);
+
+                    doc.autoTable({
+                        head: [tableColumn],
+                        body: tableRows,
+                        startY: yPosition,
+                        margin: { left: marginSides, right: marginSides },
+                        theme: 'grid',
+                        styles: { font: "Times", fontSize: 10, cellPadding: 2, lineWidth: 0.1, lineColor: [0, 0, 0], halign: 'center' },
+                        headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center' },
+                        columnStyles: { 
+                            0: { cellWidth: 40 }, 
+                            1: { cellWidth: 25 }, 
+                            2: { cellWidth: 25 }, 
+                            3: { cellWidth: 25 }, 
+                            4: { cellWidth: 45 } 
+                        }
+                    });
+
+                    yPosition = doc.lastAutoTable.finalY + 10;
+                }
+
+                // Contrôle qualité
+                if (temperatureCoulage || conditionsMeteo || resistanceCompression || essaiAffaissement) {
+                    if (yPosition > pageHeight - bottomMargin) {
+                        yPosition = addNewPage();
+                    }
+                    doc.setFont("Times", "bold");
+                    doc.text("- Contrôle qualité :", marginSides, yPosition);
+                    yPosition += 7.5; // Interligne 1.5
+                    doc.setFont("Times", "normal"); // Changer à normal après le titre principal
+
+                    const subTitles = [
+                        { title: "• Température au moment du coulage: ", text: temperatureCoulage },
+                        { title: "• Les conditions météorologiques: ", text: conditionsMeteo },
+                        { title: "• Résistance à la compression prévue: ", text: resistanceCompression },
+                        { title: "• Essai d’affaissement du béton: ", text: essaiAffaissement }
+                    ];
+
+                    subTitles.forEach(sub => {
+                        if (sub.text) {
+                            if (yPosition > pageHeight - bottomMargin) {
+                                yPosition = addNewPage();
+                            }
+                            const fullText = `${sub.title}${sub.text}`;
+                            const splitText = doc.splitTextToSize(fullText, pageWidth - 2 * marginSides);
+                            doc.text(splitText[0], marginSides + 5, yPosition); // Première ligne
+                            if (splitText.length > 1) {
+                                for (let i = 1; i < splitText.length; i++) {
+                                    yPosition += 7.5; // Interligne 1.5
+                                    if (yPosition > pageHeight - bottomMargin) {
+                                        yPosition = addNewPage();
+                                    }
+                                    doc.text(splitText[i], marginSides + 5, yPosition);
+                                }
+                            }
+                            yPosition += 7.5; // Interligne 1.5 pour le titre suivant
+                        }
+                    });
+                    yPosition += 10; // Espace après la section complète
+                }
+
+                // Observations générales et incidents dans un tableau unique (centré avec marge droite augmentée)
+                if (observationData.length > 0 || incidentData.length > 0) {
+                    if (yPosition > pageHeight - bottomMargin - 20) {
+                        yPosition = addNewPage();
+                    }
+                    doc.setFont("Times", "bold");
+                    doc.text("- Observations générales et incidents :", marginSides, yPosition);
+                    yPosition += 7.5; // Interligne 1.5
+
+                    const tableColumn = ["Titre", "Contenu", "Commentaire/Solution"];
+                    const tableRows = [];
+
+                    // Ajouter les observations
+                    observationData.forEach(obs => {
+                        tableRows.push([
+                            obs.titre,
+                            obs.contenu,
+                            "" // Pas de commentaire pour les observations
+                        ]);
+                    });
+
+                    // Ajouter les incidents
+                    incidentData.forEach(inc => {
+                        tableRows.push([
+                            inc.titre,
+                            inc.contenu,
+                            inc.solution
+                        ]);
+                    });
+
+                    const tableWidth = 180; // Largeur totale du tableau (ajustée pour rester centré)
+                    const marginRightIncreased = 35; // Augmentation de la marge droite pour centrer et éviter le bord
+
+                    doc.autoTable({
+                        head: [tableColumn],
+                        body: tableRows,
+                        startY: yPosition,
+                        margin: { left: (pageWidth - tableWidth) / 2, right: marginRightIncreased },
+                        theme: 'grid',
+                        styles: { font: "Times", fontSize: 10, cellPadding: 2, lineWidth: 0.1, lineColor: [0, 0, 0], halign: 'left' },
+                        headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center' },
+                        columnStyles: {
+                            0: { cellWidth: 50, halign: 'center' }, // Titre centré
+                            1: { cellWidth: 70 }, // Contenu
+                            2: { cellWidth: 60 }  // Commentaire/Solution
+                        }
+                    });
+
+                    yPosition = doc.lastAutoTable.finalY + 10;
+                }
+
+                // Photos avec compression
+                const images = [
+                    { file: document.getElementById('photo1').files[0], caption: document.getElementById('caption1').value },
+                    { file: document.getElementById('photo2').files[0], caption: document.getElementById('caption2').value },
+                    { file: document.getElementById('photo3').files[0], caption: document.getElementById('caption3').value },
+                    { file: document.getElementById('photo4').files[0], caption: document.getElementById('caption4').value }
+                ].filter(img => img.file); // Filtrer les images non définies
+
+                if (images.length > 0) {
+                    if (yPosition > pageHeight - bottomMargin - 50) {
+                        yPosition = addNewPage();
+                    }
+                    doc.setFontSize(14);
+                    doc.setFont("Times", "bold");
+                    doc.text("- Photos du coulage", marginSides, yPosition);
+                    yPosition += 15; // Interligne 1.5
+
+                    const imageSize = 65;
+                    const spaceBetweenImages = 14;
+                    const imagesPerRow = 2;
+
+                    let currentRowY = yPosition;
+                    let imagesInRow = 0;
+
+                    const imagePromises = images.map((imageData, index) => {
+                        return new Promise(async (resolve) => {
+                            const compressedImgData = await compressImage(imageData.file);
+                            const img = new Image();
+                            img.onload = function() {
+                                const requiredHeight = imageSize + 20; // Hauteur nécessaire pour image + légende
+                                if (yPosition + requiredHeight > pageHeight - bottomMargin || imagesInRow >= imagesPerRow) {
+                                    yPosition = addNewPage();
+                                    currentRowY = yPosition;
+                                    imagesInRow = 0;
+                                }
+
+                                const xPosition = marginSides + (imagesInRow * (imageSize + 20));
+                                doc.setDrawColor(0, 0, 0);
+                                doc.setLineWidth(0.4);
+                                doc.rect(xPosition - 0.4, currentRowY - 0.4, imageSize + 0.8, imageSize + 0.8);
+                                doc.addImage(compressedImgData, 'JPEG', xPosition, currentRowY, imageSize, imageSize);
+
+                                const captionYPosition = currentRowY + imageSize + 8;
+                                const captionText = `Figure ${index + 1} : ${imageData.caption || ''}`;
+                                doc.setTextColor(0, 100, 0);
+                                doc.setFontSize(12);
+                                doc.setFont("Helvetica", "italic");
+                                const captionXPosition = xPosition + (imageSize / 2) - (doc.getTextWidth(captionText) / 2);
+                                doc.text(captionText, captionXPosition, captionYPosition);
+                                doc.setTextColor(0, 0, 0);
+                                doc.setFont("Times", "normal");
+
+                                imagesInRow++;
+                                if (imagesInRow === imagesPerRow) {
+                                    yPosition = captionYPosition + 10;
+                                    currentRowY = yPosition;
+                                    imagesInRow = 0;
+                                } else if (index === images.length - 1) {
+                                    yPosition = captionYPosition + 10;
+                                }
+
+                                resolve();
+                            };
+                            img.onerror = resolve; // Continuer même en cas d'erreur
+                            img.src = compressedImgData;
+                        });
+                    });
+
+                    await Promise.all(imagePromises);
+                    yPosition += 10;
+                }
+
+                // Transmettre à avec un tiret
+                if (transmettreA) {
+                    if (yPosition > pageHeight - bottomMargin - 20) {
+                        yPosition = addNewPage();
+                    }
+                    doc.setFontSize(12);
+                    doc.setFont("Times", "bold");
+                    const headerText = "- Transmettre à :";
+                    const headerWidth = doc.getStringUnitWidth(headerText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+                    const headerX = (pageWidth - headerWidth) / 2;
+                    doc.text(headerText, headerX, yPosition);
+                    yPosition += 7.5; // Interligne 1.5
+                    doc.setFont("Times", "normal");
+                    const splitText = doc.splitTextToSize(`- ${transmettreA}`, pageWidth - 2 * marginSides);
+                    doc.text(splitText, marginSides, yPosition);
+                    yPosition += splitText.length * 7.5; // Interligne 1.5
+                }
+
+                // Téléchargement
+                const pdfBlob = doc.output('blob');
+                const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `PV_Coulage_${formatDate(date)}.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            generatePdf();
+        });
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+    </script>
+</body>
+</html>
